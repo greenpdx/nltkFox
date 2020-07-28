@@ -38,7 +38,7 @@ url = 'https://foxnews.com'
 
 def rdpage(rslt, coll):
   
-    rslt['ts'] = time.time()
+    rslt['ts'] = int(time.time())
     #print("\n\n",rslt)
     if coll.find_one_and_update({"href" : rslt['href'] }, { '$set': { 'last': rslt['ts']}}):
         #print("FOUND ", rslt['href'])
@@ -179,7 +179,7 @@ def bs(url, db):
                 jrtn = rdpage(lnk, dbcol)
                 cnt[2] = cnt[2] +1
         else:
-            cnt[3] =cnt [3]
+            cnt[3] =cnt[3] + 1
     print(cnt)
     return
 
