@@ -8,7 +8,7 @@
       <td class="tbl">{{ idx }}</td> 
       <!--td>{{ art._id.$oid }}</td-->
       <td class="tbl">{{ art.title }}</td>
-      <td>{{ timestamp(art.ts) }}</td>
+      <td>{{ timestamp(art) }}</td>
 
         </tr>
       </table>
@@ -40,8 +40,12 @@ export default {
         let acts = []
         let data = resp.data.rslt
         for (let jact in data) {
-          let act = JSON.parse(data[jact])
-          acts.push(act)
+          try {
+            let act = JSON.parse(data[jact])
+            acts.push(act)
+          } catch (err) {
+            console.log(err, jact)
+          }
         }
         self.arts = acts
         console.log(acts)
@@ -51,7 +55,12 @@ export default {
       })
   },
   methods: {
-    timestamp (ts) {
+    timestamp (art) {
+      let ts = art.ts
+      if (! ts) {
+        console.log(art)
+        return new Date()
+      } 
       let t =  new Date(0)
       let its = Math.round(ts)
       t.setUTCSeconds(its)
@@ -73,7 +82,7 @@ export default {
       let self = this
       //let id = art._id.$oid
       let id = this.selected._id.$oid
-      axios.get('/arts/tst/'+id)
+      axios.get('/arts/names/'+id)
       .then((resp) => {
         //console.log(resp.data)
         console.log(self.tstrslt)
