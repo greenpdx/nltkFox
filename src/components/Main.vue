@@ -1,7 +1,13 @@
 <template>
   <div class="main">
     <h1>{{ msg }}</h1>
-    <button @click="btnClk($event, selected)">Click</button>
+    <div class="control">
+      <button class="btn" @click="btnClk($event, 'names')">P Noun</button>
+      <button class="btn" @click="btnClk($event, 'ttree')">title trees</button>
+      <button class="btn" @click="btnClk($event, '2')">Click</button>
+      <button class="btn" @click="btnClk($event, '3')">Click</button>
+      <button class="btn" @click="btnClk($event, '4')">Click</button>
+    </div>
     <div class="tscroll">
       <table class="tbl tbltop">
         <tr v-for="(art, idx) in arts" :key="idx" class="tbl" @click="selArt($event, art)">
@@ -33,6 +39,15 @@ export default {
     }
   },
   created() {
+    let funcs = [
+      {name: 'names', func: this.namesRslt },
+      {name: 'ttree', func: this.titleTrees }]
+    let tf = {}
+    for (let f of funcs) {
+      tf[f.name] = f
+    }
+    this.funcs = tf
+    console.log(this.funcs)
     let self = this
     axios.get('/arts/')
       .then((resp) => {
@@ -78,15 +93,32 @@ export default {
       })
       .catch((err) => { console.log(err)})
     },
+    namesRslt(data) {
+        console.log(data)
+    },
+    titleTrees(data) {
+        let arts = JSON.parse(data)
+        for (let art of arts) {
+          // should be parsed sentance 
+          let id =  art._id
+          let tree = art.tree
+          let tags = art.tag 
+          console.log(id, tags, tree)
+        }
+    },
     btnClk(evt, art) {
+      console.log(art)
       let self = this
+      let func = this.funcs[art]
+      //console.log(this.funcs, func)
       //let id = art._id.$oid
       let id = this.selected._id.$oid
-      axios.get('/arts/names/'+id)
+      axios.get('/arts/'+art+'/'+id)
       .then((resp) => {
         //console.log(resp.data)
-        console.log(self.tstrslt)
-        self.tstrslt = resp.data.rslt
+        let data = resp.data.rslt
+        //console.log(data)
+        func.func(data)
       })
       .catch((err) => { console.log(err)})
 
@@ -98,6 +130,9 @@ export default {
 
 <!-- Add "scoped" attribute to limit CSS to this component only -->
 <style scoped>
+.btn {
+  margin: 1em;
+}
 .sticky {
   position: absolute;
   left: 0;
@@ -105,6 +140,7 @@ export default {
   top: auto;
 }
 .tbltop {
+  border: 2px solid #000;
  }
 .tscroll {
   height: 40em;
@@ -112,11 +148,15 @@ export default {
   overflow-x: scroll;
   overflow-y: visible;
   text-align: left;
+  border: 2px solid #000;
 }
 .tbl {
   border: 1px solid black;
   border-collapse: collapse;
   vertical-align: top;
+}
+.control {
+  margin: 5px;
 }
 
 </style>

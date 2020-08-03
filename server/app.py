@@ -1,5 +1,6 @@
 import falcon
 import json
+from bson.objectid import ObjectId
 from .images import Resource
 import os
 import falcon_jsonify
@@ -7,16 +8,16 @@ import mongoengine as mongo
 from mongoengine import *
 import datetime
 import pymongo
-from bson.objectid import ObjectId
 
 import nltk
 #from nltk.corpus import brown
 #from pattern.en import parse, parsetree
 from nltk.tokenize import word_tokenize
 
-from nltk import pos_tag
+from nltk import pos_tag, ne_chunk
 from nltk import sent_tokenize
 from nltk import RegexpParser
+from nltk import conlltags2tree, tree2conlltags
 
 nltk.download('punkt')
 nltk.download('averaged_perceptron_tagger')
@@ -132,6 +133,21 @@ class FindNames(object):
         #print(nnp2)
         resp.json = { 'rslt': nnp1 }
 
+class TitleTree(object):
+    @classmethod
+    def on_get(self, req, resp, id):
+        print(id)
+        arts = []
+        arts_obj = ArticleModel.objects().all_fields().limit(10)
+        for art in arts_obj:
+            title = word_tokenize(art['title'])
+            tagged = pos_tag(title)
+            tree = ne_chunk(tagged)
+            iob_tags = tree2conlltags(tree)
+            print(str(art['_id']), tagged, iob_tags)
+            arts.append({ "_id": str(art["_id"]), "tag": tagged, "tree": iob_tags})
+        resp.json = { "rslt": json.dumps( arts) }
+
 
 class GetArticles(object):
     @classmethod
@@ -162,8 +178,10 @@ images = Resource()
 arts = GetArticles()
 anltk = NLTKArticle()
 fndnam = FindNames()
+tt = TitleTree()
 
 api = application = falcon.API(middleware=middleware)
+api.add_route('/arts/ttree/{id}', tt)
 api.add_route('/arts/names/{id}', fndnam)
 api.add_route('/arts/tst/{id}', anltk)
 api.add_route('/arts/{id}', arts)
